@@ -32,3 +32,29 @@ class Room(Base):
     
     def __repr__(self):
         return f"<Room(room_code='{self.room_code}', state='{self.game_state}', players={self.current_players})>"
+
+
+class GameSession(Base):
+    __tablename__ = "game_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    room_code = Column(String(6), nullable=False)
+    questions_used = Column(Text, nullable=False)  # JSON string of question IDs and text
+    scores = Column(Text, nullable=False)  # JSON string of {nickname: score}
+    winner = Column(String(50), nullable=True)
+    total_questions = Column(Integer, default=20)
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+
+
+
+class Player(Base):
+    __tablename__ = "players"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nickname = Column(String(50), nullable=False)
+    room_code = Column(String(6), nullable=False)
+    score = Column(Integer, default=0)
+    is_host = Column(Boolean, default=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    left_at = Column(DateTime(timezone=True), nullable=True)
