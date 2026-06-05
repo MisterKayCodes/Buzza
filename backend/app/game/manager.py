@@ -90,3 +90,71 @@ class GameManager:
             }
             for p in room.players.values()
         ]
+
+    # --- NEWLY ADDED METHODS BELOW ---
+
+    async def broadcast_to_room(self, room_code: str, event: str, data: dict):
+        """Send event to all players in a room"""
+        if room_code not in self.rooms:
+            return
+            
+        room = self.rooms[room_code]
+        message = {"event": event, "data": data}
+        
+        for ws_id, player in room.players.items():
+            if ws_id in self.player_connections:
+                websocket = self.player_connections[ws_id]
+                try:
+                    await websocket.send_json(message)
+                except Exception:
+                    # Player disconnected, ignore and move on
+                    pass
+
+    async def broadcast_player_list(self, room_code: str):
+        """Broadcast updated player list to room"""
+        players = await self.get_room_players(room_code)
+        await self.broadcast_to_room(room_code, "player_list_update", {"players": players})
+
+    async def remove_player(self, websocket_id: str):
+        """Remove a disconnected player"""
+        # Find which room they were in
+        room_code = None
+        for code, room in self.rooms.items():
+            if websocket_id in room.players:
+                room_code = code
+                break
+            
+        if room_code:
+            async with self.room_lock:
+                room = self.rooms[room_code]
+                player = room.players.get(websocket_id)
+                
+                if player:
+                    nickname = player.nickname
+                    was_host = player.is_host
+                    
+                    # Remove player
+                    del room.players[websocket_id]
+                    if nickname in room.scores:
+                        del room.scores[nickname]
+                    
+                    # Remove websocket connection
+                    if websocket_id in self.player_connections:
+                        del self.player_connections[websocket_id]
+                    
+                    # If room is empty, delete it completely
+                    if len(room.players) == 0:
+                        del self.rooms[room_code]
+                        return
+                    
+                    # If host left, assign a new host dynamically
+                    if was_host and len(room.players) > 0:
+                        new_host_id = list(room.players.keys())[0]
+                        room.players[new_host_id].is_host = True
+                        room.host_nickname = room.players[new_host_id].nickname
+                    
+                    # Broadcast updated player list
+                    await self.broadcast_player_list(room_code)
+                    
+                    # Broadcast leave message
+                    await self.broadcast_to_room(room_code, "player_left", {"nickname": nickname})
