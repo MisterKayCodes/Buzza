@@ -58,3 +58,16 @@ class Player(Base):
     is_host = Column(Boolean, default=False)
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
     left_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class Question(Base):
+    __tablename__ = "questions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    question_text = Column(String(500), nullable=False)
+    question_type = Column(String(20), nullable=False)  # factual, list, truefalse, fillblank
+    correct_answer = Column(String(200), nullable=True)  # for factual/truefalse/fillblank
+    alternative_answers = Column(JSON, nullable=True)  # for list questions
+    difficulty = Column(String(10), nullable=False)  # easy, medium
+    category = Column(String(50), nullable=True)
+    source = Column(String(20), default="opentdb")  # opentdb or nigerian
