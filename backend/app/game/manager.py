@@ -205,7 +205,12 @@ class GameManager:
         
         room.question_locked = False
         
-        asyncio.create_task(self.start_question_timer(room_code))
+        # Cancel existing timer if any
+        if room.timer_task:
+            room.timer_task.cancel()
+        
+        # Start new timer and store it
+        room.timer_task = asyncio.create_task(self.start_question_timer(room_code))
 
     async def start_question_timer(self, room_code: str):
         """Start 15 second timer for current question"""
@@ -213,6 +218,10 @@ class GameManager:
         
         if room_code in self.rooms:
             room = self.rooms[room_code]
+            
+            # Clear the stored timer reference
+            room.timer_task = None
+            
             if not room.question_locked:
                 room.question_locked = True
                 
@@ -293,6 +302,11 @@ class GameManager:
                     break
         
         if is_correct:
+            # Cancel the timer
+            if room.timer_task:
+                room.timer_task.cancel()
+                room.timer_task = None
+            
             room.question_locked = True
             
             room.scores[nickname] = room.scores.get(nickname, 0) + 1

@@ -60,8 +60,24 @@ async def websocket_endpoint(websocket: WebSocket):
         # Keep connection alive and listen for messages
         while True:
             message = await websocket.receive_json()
-            # Handle other events like answers later
-            print(f"Received: {message}")
+            action = message.get("action")
+            
+            if action == "start_game":
+                room_code = message.get("room_code")
+                host_nickname = message.get("nickname")
+                await game_manager.start_game(room_code, host_nickname)
+                
+            elif action == "submit_answer":
+                room_code = message.get("room_code")
+                nickname = message.get("nickname")
+                answer = message.get("answer")
+                await game_manager.submit_answer(room_code, nickname, answer)
+                
+            elif action == "leave_room":
+                await game_manager.remove_player(websocket_id)
+            
+            # For debugging
+            print(f"Received action: {action}")
             
     except WebSocketDisconnect:
         await game_manager.remove_player(websocket_id)
