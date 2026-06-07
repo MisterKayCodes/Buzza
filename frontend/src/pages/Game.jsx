@@ -1,14 +1,50 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
   const [answer, setAnswer] = useState('')
-  const [timer, setTimer] = useState(currentQuestion?.timer_seconds || 15)
+  const [timeLeft, setTimeLeft] = useState(15)
+
+  // Reset timer when new question arrives
+  useEffect(() => {
+    if (currentQuestion) {
+      setTimeLeft(currentQuestion.timer_seconds || 15)
+    }
+  }, [currentQuestion])
+
+  // Timer countdown
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const interval = setInterval(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [timeLeft])
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px' }}>
+      {/* Timer Progress Bar */}
+      <div style={{
+        width: '100%',
+        height: '8px',
+        background: 'var(--border)',
+        borderRadius: '4px',
+        marginBottom: '20px'
+      }}>
+        <div style={{
+          width: `${(timeLeft / 15) * 100}%`,
+          height: '100%',
+          background: timeLeft < 5 ? 'red' : 'var(--accent)',
+          borderRadius: '4px',
+          transition: 'width 1s linear'
+        }} />
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>Question {currentQuestion.question_number}/{currentQuestion.total_questions}</div>
-        <div style={{ color: timer < 5 ? 'red' : 'inherit' }}>⏱️ {timer}s</div>
+        <div style={{ color: timeLeft < 5 ? 'red' : 'inherit', fontWeight: 'bold' }}>
+          ⏱️ {timeLeft}s
+        </div>
       </div>
       
       <div style={{ background: 'var(--code-bg)', padding: '40px', borderRadius: '16px', marginBottom: '30px' }}>

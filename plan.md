@@ -58,7 +58,7 @@
 - Visual timer bar that shrinks over time
 - Timer turns red at 5 seconds remaining
 
-**Status: ❌ NOT STARTED**
+**Status: ✅ DONE**
 
 ### B.2 True/False Buttons
 - Check question_type === 'truefalse'
