@@ -232,9 +232,9 @@ class GameManager:
                     "message": "Time's up! No one got it right."
                 })
                 
-                # After timeout, wait then request next question via countdown
+                # After timeout, wait then move to next question
                 await asyncio.sleep(2)
-                await self.request_next_question(room_code)
+                await self.next_question(room_code)
 
     async def next_question(self, room_code: str):
         """Move to next question or end game"""
@@ -243,12 +243,20 @@ class GameManager:
         
         room = self.rooms[room_code]
         
+        # Prevent duplicate calls
+        if getattr(room, 'moving_to_next', False):
+            return
+        
+        room.moving_to_next = True
+        
         room.current_question_index += 1
         
         if room.current_question_index >= len(room.questions):
             await self.end_game(room_code)
         else:
             await self.send_current_question(room_code)
+        
+        room.moving_to_next = False
 
     async def request_next_question(self, room_code: str):
         """Called by frontend after countdown to move to next question"""
