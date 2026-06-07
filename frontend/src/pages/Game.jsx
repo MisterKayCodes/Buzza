@@ -8,6 +8,7 @@ function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
   useEffect(() => {
     if (currentQuestion) {
       setTimeLeft(currentQuestion.timer_seconds || 15)
+      setAnswer('')
     }
   }, [currentQuestion])
 
@@ -20,6 +21,13 @@ function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
       return () => clearInterval(interval)
     }
   }, [timeLeft])
+
+  const handleTrueFalseAnswer = (value) => {
+    onSubmitAnswer(value)
+    setAnswer('')
+  }
+
+  const isTrueFalse = currentQuestion?.question_type === 'truefalse'
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px' }}>
@@ -51,46 +59,88 @@ function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
         <h2 style={{ margin: 0 }}>{currentQuestion.question_text}</h2>
       </div>
       
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <input
-          type="text"
-          placeholder="Type your answer..."
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
+      {/* Answer Input Area */}
+      {isTrueFalse ? (
+        // True/False Buttons
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+          <button
+            onClick={() => handleTrueFalseAnswer('True')}
+            style={{
+              padding: '20px 40px',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'green',
+              color: 'white',
+              cursor: 'pointer',
+              flex: 1,
+              maxWidth: '200px'
+            }}
+          >
+            ✅ True
+          </button>
+          <button
+            onClick={() => handleTrueFalseAnswer('False')}
+            style={{
+              padding: '20px 40px',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'red',
+              color: 'white',
+              cursor: 'pointer',
+              flex: 1,
+              maxWidth: '200px'
+            }}
+          >
+            ❌ False
+          </button>
+        </div>
+      ) : (
+        // Text Input for other question types
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            placeholder="Type your answer..."
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                onSubmitAnswer(answer)
+                setAnswer('')
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: '14px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              background: 'var(--bg)',
+              color: 'var(--text-h)'
+            }}
+          />
+          <button
+            onClick={() => {
               onSubmitAnswer(answer)
               setAnswer('')
-            }
-          }}
-          style={{
-            flex: 1,
-            padding: '14px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: '1px solid var(--border)',
-            background: 'var(--bg)',
-            color: 'var(--text-h)'
-          }}
-        />
-        <button
-          onClick={() => {
-            onSubmitAnswer(answer)
-            setAnswer('')
-          }}
-          style={{
-            padding: '14px 24px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: 'var(--accent)',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          Submit
-        </button>
-      </div>
+            }}
+            style={{
+              padding: '14px 24px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'var(--accent)',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            Submit
+          </button>
+        </div>
+      )}
       
       <div style={{ marginTop: '30px' }}>
         <h3>Scores</h3>
