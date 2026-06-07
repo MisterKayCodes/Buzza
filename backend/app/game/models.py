@@ -24,3 +24,4 @@ class RoomState(BaseModel):
     scores: Dict[str, int] = {}  # key: nickname, value: score
     timer_task: Optional[Any] = None
     question_locked: bool = False
+    moving_to_next: bool = False  # ADD THIS LINE

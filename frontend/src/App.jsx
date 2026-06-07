@@ -18,6 +18,7 @@ function App() {
   const [wrongMessage, setWrongMessage] = useState('')
   const [wrongAttemptMessage, setWrongAttemptMessage] = useState('')
   const [correctMessage, setCorrectMessage] = useState('')
+  const [showCountdown, setShowCountdown] = useState(false)
 
   const { isConnected, messages, sendMessage, connect, disconnect } = useWebSocket()
 
@@ -49,6 +50,7 @@ function App() {
           setWrongMessage('')
           setWrongAttemptMessage('')
           setCorrectMessage('')
+          setShowCountdown(false)
           break
         case 'answer_correct':
           setScores(prev => ({ ...prev, [data.nickname]: data.new_score }))
@@ -56,7 +58,11 @@ function App() {
           // Clear old wrong messages when someone answers correctly
           setWrongMessage('')
           setWrongAttemptMessage('')
-          setTimeout(() => setCorrectMessage(''), 3000)
+          setTimeout(() => setCorrectMessage(''), 5000)
+          break
+        case 'question_locked':
+          // Show countdown overlay after someone answers correctly
+          setShowCountdown(true)
           break
         case 'answer_wrong':
           setWrongMessage(data.message)
@@ -99,6 +105,11 @@ function App() {
     sendMessage({ action: 'submit_answer', room_code: roomCode, nickname, answer })
   }
 
+  const requestNextQuestion = () => {
+    setShowCountdown(false)
+    sendMessage({ action: 'request_next_question', room_code: roomCode })
+  }
+
   const handleLeave = () => {
     setScreen('home')
     setNickname('')
@@ -109,6 +120,7 @@ function App() {
     setWrongMessage('')
     setWrongAttemptMessage('')
     setCorrectMessage('')
+    setShowCountdown(false)
   }
 
   const handlePlayAgain = () => {
@@ -122,6 +134,7 @@ function App() {
     setWrongMessage('')
     setWrongAttemptMessage('')
     setCorrectMessage('')
+    setShowCountdown(false)
   }
 
   if (screen === 'home') {
@@ -151,6 +164,8 @@ function App() {
         wrongMessage={wrongMessage}
         wrongAttemptMessage={wrongAttemptMessage}
         correctMessage={correctMessage}
+        showCountdown={showCountdown}
+        onCountdownComplete={requestNextQuestion}
       />
     )
   }

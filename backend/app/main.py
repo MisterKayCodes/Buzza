@@ -73,6 +73,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 answer = message.get("answer")
                 await game_manager.submit_answer(room_code, nickname, answer)
                 
+            elif action == "request_next_question":
+                room_code = message.get("room_code")
+                await game_manager.request_next_question(room_code)
+                
             elif action == "leave_room":
                 await game_manager.remove_player(websocket_id)
             

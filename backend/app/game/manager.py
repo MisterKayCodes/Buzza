@@ -232,8 +232,9 @@ class GameManager:
                     "message": "Time's up! No one got it right."
                 })
                 
+                # After timeout, wait then request next question via countdown
                 await asyncio.sleep(2)
-                await self.next_question(room_code)
+                await self.request_next_question(room_code)
 
     async def next_question(self, room_code: str):
         """Move to next question or end game"""
@@ -248,6 +249,29 @@ class GameManager:
             await self.end_game(room_code)
         else:
             await self.send_current_question(room_code)
+
+    async def request_next_question(self, room_code: str):
+        """Called by frontend after countdown to move to next question"""
+        if room_code not in self.rooms:
+            return
+        
+        room = self.rooms[room_code]
+        
+        # Prevent multiple requests
+        if getattr(room, 'moving_to_next', False):
+            return
+        
+        room.moving_to_next = True
+        
+        # Move to next question or end game
+        room.current_question_index += 1
+        
+        if room.current_question_index >= len(room.questions):
+            await self.end_game(room_code)
+        else:
+            await self.send_current_question(room_code)
+        
+        room.moving_to_next = False
 
     async def end_game(self, room_code: str):
         """End the game and show final results"""
@@ -323,7 +347,12 @@ class GameManager:
                 "correct_answer": current_q["correct_answer"]
             })
             
-            asyncio.create_task(self.delay_and_next(room_code))
+            # Frontend will handle countdown and request next question
+            # Send question locked event to trigger countdown
+            await self.broadcast_to_room(room_code, "question_locked", {
+                "winner": nickname,
+                "correct_answer": current_q["correct_answer"]
+            })
             
             return True
         else:
@@ -347,8 +376,3 @@ class GameManager:
                     break
             
             return False
-
-    async def delay_and_next(self, room_code: str):
-        """Delay 2 seconds then move to next question"""
-        await asyncio.sleep(2)
-        await self.next_question(room_code)
