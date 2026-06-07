@@ -327,10 +327,25 @@ class GameManager:
             
             return True
         else:
-            await self.broadcast_to_room(room_code, "answer_wrong", {
+            # Broadcast to everyone that someone attempted but failed
+            await self.broadcast_to_room(room_code, "answer_wrong_attempt", {
                 "nickname": nickname,
-                "message": "Wrong answer! Keep trying."
+                "message": f"{nickname} attempted but failed!"
             })
+            
+            # Send specific feedback to the player who answered wrong
+            for ws_id, player in room.players.items():
+                if player.nickname == nickname:
+                    websocket = self.player_connections.get(ws_id)
+                    if websocket:
+                        await websocket.send_json({
+                            "event": "answer_wrong",
+                            "data": {
+                                "message": "Wrong answer! Try again."
+                            }
+                        })
+                    break
+            
             return False
 
     async def delay_and_next(self, room_code: str):

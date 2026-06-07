@@ -15,6 +15,9 @@ function App() {
   const [currentQuestion, setCurrentQuestion] = useState(null)
   const [scores, setScores] = useState({})
   const [leaderboard, setLeaderboard] = useState([])
+  const [wrongMessage, setWrongMessage] = useState('')
+  const [wrongAttemptMessage, setWrongAttemptMessage] = useState('')
+  const [correctMessage, setCorrectMessage] = useState('')
 
   const { isConnected, messages, sendMessage, connect, disconnect } = useWebSocket()
 
@@ -42,9 +45,26 @@ function App() {
           break
         case 'question_show':
           setCurrentQuestion(data)
+          // Clear all messages when new question arrives
+          setWrongMessage('')
+          setWrongAttemptMessage('')
+          setCorrectMessage('')
           break
         case 'answer_correct':
           setScores(prev => ({ ...prev, [data.nickname]: data.new_score }))
+          setCorrectMessage(`${data.nickname} got it right! Answer: ${data.correct_answer}`)
+          // Clear old wrong messages when someone answers correctly
+          setWrongMessage('')
+          setWrongAttemptMessage('')
+          setTimeout(() => setCorrectMessage(''), 3000)
+          break
+        case 'answer_wrong':
+          setWrongMessage(data.message)
+          setTimeout(() => setWrongMessage(''), 2000)
+          break
+        case 'answer_wrong_attempt':
+          setWrongAttemptMessage(data.message)
+          setTimeout(() => setWrongAttemptMessage(''), 2000)
           break
         case 'game_over':
           setLeaderboard(data.leaderboard)
@@ -86,6 +106,9 @@ function App() {
     setPlayers([])
     setScores({})
     setCurrentQuestion(null)
+    setWrongMessage('')
+    setWrongAttemptMessage('')
+    setCorrectMessage('')
   }
 
   const handlePlayAgain = () => {
@@ -96,6 +119,9 @@ function App() {
     setScores({})
     setCurrentQuestion(null)
     setLeaderboard([])
+    setWrongMessage('')
+    setWrongAttemptMessage('')
+    setCorrectMessage('')
   }
 
   if (screen === 'home') {
@@ -122,6 +148,9 @@ function App() {
         scores={scores}
         nickname={nickname}
         onSubmitAnswer={handleSubmitAnswer}
+        wrongMessage={wrongMessage}
+        wrongAttemptMessage={wrongAttemptMessage}
+        correctMessage={correctMessage}
       />
     )
   }

@@ -1,16 +1,46 @@
 import { useState, useEffect } from 'react'
 
-function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
+function Game({ currentQuestion, scores, nickname, onSubmitAnswer, wrongMessage, wrongAttemptMessage, correctMessage }) {
   const [answer, setAnswer] = useState('')
   const [timeLeft, setTimeLeft] = useState(15)
+  const [showWrongMessage, setShowWrongMessage] = useState('')
+  const [showAttemptMessage, setShowAttemptMessage] = useState('')
+  const [showCorrectMessage, setShowCorrectMessage] = useState('')
 
-  // Reset timer when new question arrives
+  // Reset timer and messages when new question arrives
   useEffect(() => {
     if (currentQuestion) {
       setTimeLeft(currentQuestion.timer_seconds || 15)
       setAnswer('')
+      setShowWrongMessage('')
+      setShowAttemptMessage('')
+      setShowCorrectMessage('')
     }
   }, [currentQuestion])
+
+  // Handle wrong message from props
+  useEffect(() => {
+    if (wrongMessage) {
+      setShowWrongMessage(wrongMessage)
+      setTimeout(() => setShowWrongMessage(''), 2000)
+    }
+  }, [wrongMessage])
+
+  // Handle wrong attempt message from props
+  useEffect(() => {
+    if (wrongAttemptMessage) {
+      setShowAttemptMessage(wrongAttemptMessage)
+      setTimeout(() => setShowAttemptMessage(''), 2000)
+    }
+  }, [wrongAttemptMessage])
+
+  // Handle correct message from props
+  useEffect(() => {
+    if (correctMessage) {
+      setShowCorrectMessage(correctMessage)
+      setTimeout(() => setShowCorrectMessage(''), 3000)
+    }
+  }, [correctMessage])
 
   // Timer countdown
   useEffect(() => {
@@ -31,6 +61,71 @@ function Game({ currentQuestion, scores, nickname, onSubmitAnswer }) {
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px' }}>
+      {/* Floating Toast Notifications */}
+      {(showWrongMessage || showAttemptMessage || showCorrectMessage) && (
+        <>
+          {showCorrectMessage && (
+            <div style={{
+              position: 'fixed',
+              bottom: '100px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              background: '#00c851',
+              color: 'white',
+              zIndex: 1000,
+              textAlign: 'center',
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              pointerEvents: 'none'
+            }}>
+              {showCorrectMessage}
+            </div>
+          )}
+          
+          {showWrongMessage && (
+            <div style={{
+              position: 'fixed',
+              bottom: '100px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              background: '#ff4444',
+              color: 'white',
+              zIndex: 1000,
+              textAlign: 'center',
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              pointerEvents: 'none'
+            }}>
+              {showWrongMessage}
+            </div>
+          )}
+          
+          {showAttemptMessage && (
+            <div style={{
+              position: 'fixed',
+              bottom: '100px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              background: '#ff8800',
+              color: 'white',
+              zIndex: 1000,
+              textAlign: 'center',
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              pointerEvents: 'none'
+            }}>
+              {showAttemptMessage}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Timer Progress Bar */}
       <div style={{
         width: '100%',
